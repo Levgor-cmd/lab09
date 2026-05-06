@@ -1,124 +1,143 @@
 [![CI](https://github.com/Levgor-cmd/lab06/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/Levgor-cmd/lab06/actions/workflows/ci.yml)
 
-## Отчёт к лабораторной работе 05
+## Отчёт к лабораторной работе 06
 
 ### После ознакомления с учебным материалом приступим к выполнению инструкций учебного материала
 
-### 1. Подготовка репозитория
+### 1. Подготовка окружения и репозитория
 
 ```bash
 export GITHUB_USERNAME=Levgor-cmd
+export GITHUB_EMAIL=gorlinskiy.lev@bk.ru
 cd ${GITHUB_USERNAME}/workspace
-git clone https://github.com/${GITHUB_USERNAME}/lab04 projects/lab06
+git clone https://github.com/${GITHUB_USERNAME}/lab05 projects/lab06
 cd projects/lab06
 git remote remove origin
 git remote add origin https://github.com/${GITHUB_USERNAME}/lab06
 ```
-**Комментарий:** Репозиторий lab04 скопирован в lab06 для дальнейшей работы.
+**Комментарий:** Создана копия репозитория lab05 для дальнейшей работы с пакетированием.
 
----
 
-### 2. Подключение Google Test
+### 2. Добавление версионирования в CMakeLists.txt
 
 ```bash
-mkdir third-party
-git submodule add https://github.com/google/googletest third-party/gtest
-cd third-party/gtest && git checkout v1.15.2 && cd ../..
-git add third-party/gtest
-git commit -m "added gtest framework"
+gsed -i '/project(print)/a\
+set(PRINT_VERSION_MAJOR 0)\
+set(PRINT_VERSION_MINOR 1)\
+set(PRINT_VERSION_PATCH 0)\
+set(PRINT_VERSION_TWEAK 0)\
+set(PRINT_VERSION ${PRINT_VERSION_MAJOR}.${PRINT_VERSION_MINOR}.${PRINT_VERSION_PATCH}.${PRINT_VERSION_TWEAK})\
+set(PRINT_VERSION_STRING "v${PRINT_VERSION}")
+' CMakeLists.txt
 ```
-**Комментарий:** Добавлен подмодуль gtest версии 1.15.2 для модульного тестирования. Версия 1.8.1 вызвала ошибки компиляции, поэтому использована более новая.
 
----
+**Результат (git diff):**
+```diff
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index eba607f..f825257 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,12 @@
+ cmake_minimum_required(VERSION 3.10)
+ project(print)
++set(PRINT_VERSION_MAJOR 0)
++set(PRINT_VERSION_MINOR 1)
++set(PRINT_VERSION_PATCH 0)
++set(PRINT_VERSION_TWEAK 0)
++set(PRINT_VERSION
++  ${PRINT_VERSION_MAJOR}.${PRINT_VERSION_MINOR}.${PRINT_VERSION_PATCH}.${PRINT_VERSION_TWEAK})
++set(PRINT_VERSION_STRING "v${PRINT_VERSION}")
 
-### 3. Настройка CMake для тестирования
+ add_library(print STATIC sources/print.cpp)
+ target_include_directories(print PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+```
 
-**CMakeLists.txt:**
+### 3. Создание файлов описания
+
+```bash
+touch DESCRIPTION ChangeLog.md
+export DATE="$(LANG=en_US date +'%a %b %d %Y')"
+```
+
+**DESCRIPTION:**
+```
+print library - static C++ library for printing
+```
+
+**ChangeLog.md:**
+```
+* ${DATE} Levgor-cmd <gorlinskiy.lev@bk.ru> 0.1.0.0
+- Initial RPM release
+```
+
+### 4. Настройка CPack
+
+**CPackConfig.cmake:**
 ```cmake
-cmake_minimum_required(VERSION 3.10)
-project(print)
+include(InstallRequiredSystemLibraries)
 
-add_library(print STATIC sources/print.cpp)
-target_include_directories(print PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(CPACK_PACKAGE_CONTACT ${GITHUB_EMAIL})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PRINT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PRINT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PRINT_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION_TWEAK ${PRINT_VERSION_TWEAK})
+set(CPACK_PACKAGE_VERSION ${PRINT_VERSION})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "static C++ library for printing")
 
-if(BUILD_TESTS)
-  enable_testing()
-  add_subdirectory(third-party/gtest)
-  file(GLOB TEST_SOURCES tests/*.cpp)
-  add_executable(check ${TEST_SOURCES})
-  target_link_libraries(check print gtest_main)
-  add_test(NAME check COMMAND check)
-endif()
+set(CPACK_RPM_PACKAGE_NAME "print-devel")
+set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+set(CPACK_RPM_PACKAGE_GROUP "print")
+set(CPACK_RPM_PACKAGE_RELEASE 1)
+
+set(CPACK_DEBIAN_PACKAGE_NAME "libprint-dev")
+set(CPACK_DEBIAN_PACKAGE_PREDEPENDS "cmake >= 3.0")
+set(CPACK_DEBIAN_PACKAGE_RELEASE 1)
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "gorlinskiy.lev@bk.ru")
+
+include(CPack)
 ```
 
----
-
-### 4. Написание теста
-
-**tests/test1.cpp:**
-```cpp
-#include <print.hpp>
-#include <gtest/gtest.h>
-#include <fstream>
-
-TEST(Print, InFileStream)
-{
-  std::string filepath = "file.txt";
-  std::string text = "hello";
-  std::ofstream out{filepath};
-  print(text, out);
-  out.close();
-
-  std::string result;
-  std::ifstream in{filepath};
-  in >> result;
-  EXPECT_EQ(result, text);
-}
+**Подключение CPack к CMakeLists.txt:**
+```bash
+echo "" >> CMakeLists.txt
+echo "include(CPackConfig.cmake)" >> CMakeLists.txt
 ```
 
----
-
-### 5. Сборка и тестирование
+### 5. Коммит и отправка на GitHub
 
 ```bash
-cmake -H. -B_build -DBUILD_TESTS=ON
+git add .
+git commit -m "added cpack config"
+git push origin main --tags
+```
+
+### 6. Сборка пакета
+
+```bash
+cmake -H. -B_build
 cmake --build _build
-cmake --build _build --target test
+cd _build
+cpack -G "TGZ"
 ```
 
 **Результат:**
 ```
-100% tests passed, 0 tests failed out of 1
+CPack: - package: /home/lev/Levgor-cmd/workspace/projects/lab06/_build/print-0.1.0.0-Source.tar.gz generated.
 ```
 
-**Запуск теста вручную:**
+### 7. Установка RPM и создание артефактов
+
 ```bash
-_build/check
-```
-```
-[==========] Running 1 test from 1 test suite.
-[ RUN      ] Print.InFileStream
-[       OK ] Print.InFileStream (0 ms)
-[  PASSED  ] 1 test.
+sudo apt install rpm -y
+mkdir -p ../artifacts
+mv *.tar.gz ../artifacts/
 ```
 
----
-
-### 6. Настройка CI (GitHub Actions)
-
-**.github/workflows/ci.yml:**
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Configure
-      run: cmake -H. -B_build -DBUILD_TESTS=ON
-    - name: Build
-      run: cmake --build _build
-    - name: Test
-      run: cd _build && ctest
+**Проверка:**
+```bash
+ls -la ../artifacts/
 ```
+```
+print-0.1.0.0-Source.tar.gz
+```
+
