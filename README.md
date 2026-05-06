@@ -1,4 +1,4 @@
-[![CI](https://github.com/Levgor-cmd/lab05/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/Levgor-cmd/lab05/actions/workflows/ci.yml)
+[![CI](https://github.com/Levgor-cmd/lab06/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/Levgor-cmd/lab06/actions/workflows/ci.yml)
 
 ## Отчёт к лабораторной работе 05
 
@@ -9,12 +9,12 @@
 ```bash
 export GITHUB_USERNAME=Levgor-cmd
 cd ${GITHUB_USERNAME}/workspace
-git clone https://github.com/${GITHUB_USERNAME}/lab04 projects/lab05
-cd projects/lab05
+git clone https://github.com/${GITHUB_USERNAME}/lab04 projects/lab06
+cd projects/lab06
 git remote remove origin
-git remote add origin https://github.com/${GITHUB_USERNAME}/lab05
+git remote add origin https://github.com/${GITHUB_USERNAME}/lab06
 ```
-**Комментарий:** Репозиторий lab04 скопирован в lab05 для дальнейшей работы.
+**Комментарий:** Репозиторий lab04 скопирован в lab06 для дальнейшей работы.
 
 ---
 
