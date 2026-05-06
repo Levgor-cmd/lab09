@@ -1,29 +1,20 @@
-name: CMake CI
+name: CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Install CMake
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake cmake-data
-    
+    - uses: actions/checkout@v2
     - name: Configure CMake
-      run: cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install
-    
+      run: cmake -H. -B_build -DBUILD_TESTS=ON
     - name: Build
       run: cmake --build _build
-    
-    - name: Install
-      run: cmake --build _build --target install
+    - name: Run tests
+      run: cd _build && ctest
