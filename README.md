@@ -1,3 +1,5 @@
+[![CI](https://github.com/Levgor-cmd/lab05/actions/workflows/ci.yml/badge.svg)](https://github.com/Levgor-cmd/lab05/actions/workflows/ci.yml)
+
 ## Отчёт к лабораторной работе 05
 
 ### После ознакомления с учебным материалом приступим к выполнению инструкций учебного материала
