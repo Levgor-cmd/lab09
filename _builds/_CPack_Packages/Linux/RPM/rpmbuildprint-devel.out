@@ -1,0 +1,11 @@
+Executing(%mkbuilddir): /bin/sh -e /var/tmp/rpm-tmp.uSfCap
+Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.aRsSxG
+Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.Ct8RYF
+Processing files: print-devel-0.1.0.0-1.x86_64
+Provides: print-devel = 0.1.0.0-1 print-devel(x86-64) = 0.1.0.0-1
+Requires(rpmlib): rpmlib(CompressedFileNames) <= 3.0.4-1 rpmlib(FileDigests) <= 4.6.0-1 rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+Requires: libc.so.6()(64bit) libc.so.6(GLIBC_2.2.5)(64bit) libc.so.6(GLIBC_2.34)(64bit) libgcc_s.so.1()(64bit) libgcc_s.so.1(GCC_3.0)(64bit) libstdc++.so.6()(64bit) libstdc++.so.6(CXXABI_1.3)(64bit) libstdc++.so.6(GLIBCXX_3.4)(64bit) libstdc++.so.6(GLIBCXX_3.4.21)(64bit) libstdc++.so.6(GLIBCXX_3.4.32)(64bit) rtld(GNU_HASH)
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /home/lev/Levgor-cmd/workspace/projects/lab07/_builds/_CPack_Packages/Linux/RPM/print-0.1.0.0-Linux
+Wrote: /home/lev/Levgor-cmd/workspace/projects/lab07/_builds/_CPack_Packages/Linux/RPM/RPMS/print-0.1.0.0-Linux.rpm
+Executing(%clean): /bin/sh -e /var/tmp/rpm-tmp.x1V98B
+Executing(rmbuild): /bin/sh -e /var/tmp/rpm-tmp.AMBVTm
