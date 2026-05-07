@@ -13,22 +13,24 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: false  # Отключаем синхронизацию submodules
+        submodules: false
     
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y cmake build-essential
     
+    - name: Clean previous builds
+      run: |
+        rm -rf _builds builds build
+    
     - name: Configure CMake
-      run: cmake -H. -B_builds -DBUILD_TESTS=ON
+      run: cmake -H. -Bbuild -DBUILD_TESTS=ON
     
     - name: Build
-      run: cmake --build _builds
+      run: cmake --build build
     
     - name: Run tests
       run: |
-        cd _builds
+        cd build
         ctest --output-on-failure
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
