@@ -1,8 +1,8 @@
-[![CI](https://github.com/Levgor-cmd/lab07/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/Levgor-cmd/lab07/actions/workflows/ci.yml)
-
-## Отчёт к лабораторной работе 07
+[![Docker Build](https://github.com/Levgor-cmd/lab08/actions/workflows/docker.yml/badge.svg)](https://github.com/Levgor-cmd/lab08/actions/workflows/docker.yml)
 
 ### После ознакомления с учебным материалом приступим к выполнению инструкций учебного материала
+
+## Отчёт к лабораторной работе 08
 
 ### 1. Подготовка репозитория
 
@@ -10,171 +10,127 @@
 export GITHUB_USERNAME=Levgor-cmd
 cd ${GITHUB_USERNAME}/workspace
 source scripts/activate
-git clone https://github.com/${GITHUB_USERNAME}/lab06 projects/lab07
-cd projects/lab07
+git clone https://github.com/${GITHUB_USERNAME}/lab07 lab08
+cd lab08
 git remote remove origin
-git remote add origin https://github.com/${GITHUB_USERNAME}/lab07
+git remote add origin https://github.com/${GITHUB_USERNAME}/lab08
 ```
 
- 
+### 2. Создание Dockerfile
 
-### 2. Удаление старого подмодуля gtest
+```dockerfile
+FROM ubuntu:22.04
+
+RUN apt update && apt install -y gcc g++ cmake make
+
+COPY . print/
+WORKDIR print
+
+RUN cmake -H. -B_build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_install
+RUN cmake --build _build
+RUN cmake --build _build --target install
+
+ENV LOG_PATH /home/logs/log.txt
+
+VOLUME /home/logs
+
+WORKDIR _install/bin
+
+ENTRYPOINT ["./demo"]
+```
+
+
+### 3. Сборка Docker образа
 
 ```bash
-git rm -rf third-party/gtest
-git add -A
-git commit -m "remove gtest submodule"
-```
-
-
-
-### 3. Настройка CMakeLists.txt с использованием FetchContent
-
-```cmake
-cmake_minimum_required(VERSION 3.14)
-project(print)
-
-set(PRINT_VERSION_MAJOR 0)
-set(PRINT_VERSION_MINOR 1)
-set(PRINT_VERSION_PATCH 0)
-set(PRINT_VERSION_TWEAK 0)
-set(PRINT_VERSION
-  ${PRINT_VERSION_MAJOR}.${PRINT_VERSION_MINOR}.${PRINT_VERSION_PATCH}.${PRINT_VERSION_TWEAK})
-set(PRINT_VERSION_STRING "v${PRINT_VERSION}")
-
-# Библиотека print
-add_library(print STATIC sources/print.cpp)
-target_include_directories(print PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-# Тестирование через FetchContent
-if(BUILD_TESTS)
-  enable_testing()
-  include(FetchContent)
-  FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG v1.15.2
-  )
-  FetchContent_MakeAvailable(googletest)
-  
-  file(GLOB TEST_SOURCES tests/*.cpp)
-  add_executable(check ${TEST_SOURCES})
-  target_link_libraries(check print GTest::gtest_main)
-  add_test(NAME check COMMAND check)
-endif()
-
-# Demo приложение
-add_executable(demo demo/main.cpp)
-target_link_libraries(demo print)
-install(TARGETS demo RUNTIME DESTINATION bin)
-
-include(CPackConfig.cmake)
-```
-**Комментарий:** Вместо устаревшего Hunter использован нативный FetchContent для автоматической загрузки Google Test.
-
-
-
-### 4. Создание demo приложения
-
-```cpp
-#include <print.hpp>
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-
-int main(int argc, char* argv[])
-{
-  const char* log_path = std::getenv("LOG_PATH");
-  if (log_path == nullptr)
-  {
-    std::cerr << "undefined environment variable: LOG_PATH" << std::endl;
-    return 1;
-  }
-  std::string text;
-  while (std::cin >> text)
-  {
-    std::ofstream out{log_path, std::ios_base::app};
-    print(text, out);
-    out << std::endl;
-  }
-  return 0;
-}
-```
-**Комментарий:** Приложение читает слова из stdin и записывает их в файл, указанный в переменной окружения LOG_PATH.
-
-
-
-### 5. Сборка проекта
-
-```bash
-cmake -H. -B_builds -DBUILD_TESTS=ON
-cmake --build _builds
-```
-
-**Результат сборки:**
-- Библиотека `libprint.a`
-- Тесты `check`
-- Demo приложение `demo`
-- Google Test (автоматически загружен через FetchContent)
-
-
-
-### 6. Запуск тестов
-
-```bash
-_builds/check
-```
-**Результат:**
-```
-[==========] Running 1 test from 1 test suite.
-[ RUN      ] Print.InFileStream
-[       OK ] Print.InFileStream (0 ms)
-[  PASSED  ] 1 test.
-```
-
-
-
-### 7. Проверка demo приложения
-
-```bash
-export LOG_PATH=/tmp/log.txt
-echo "Hello from demo" | _builds/demo
-cat /tmp/log.txt
+sudo docker build -t logger .
 ```
 
 **Результат:**
 ```
-Hello
-from
-demo
+[+] Building 100.7s (13/13) FINISHED
+ => naming to docker.io/library/logger
 ```
 
+---
 
-
-### 8. Установка приложения
+### 4. Просмотр образов
 
 ```bash
-cmake --install _builds --prefix ./_install
+sudo docker images | grep logger
 ```
 
-**Структура установки:**
+**Результат:**
 ```
-_install/
-├── bin/
-│   └── demo
-├── include/
-└── lib/
-    ├── libprint.a
-    └── cmake/
+logger       latest    488555733544   7 minutes ago   478MB
 ```
 
 
-
-### 9. Создание пакетов CPack
+### 5. Запуск контейнера
 
 ```bash
-cd _builds
-cpack -G "TGZ"   # создан print-0.1.0.0-Linux.tar.gz
-cpack -G "RPM"   # создан print-0.1.0.0-Linux.rpm
-cpack -G "DEB"   # пропущен (требуется настройка maintainer)
+sudo docker run -it -v "$(pwd)/logs/:/home/logs/" logger
 ```
+
+```
+hello
+world
+(Ctrl+D, чтобы выйти)
+```
+
+### 6. Проверка логов
+
+```bash
+cat logs/log.txt
+```
+
+**Результат:**
+```
+hello
+world
+```
+
+### 7. Инспекция образа
+
+```bash
+sudo docker inspect logger
+```
+
+**Полученная информация:**
+- **Размер:** 478MB
+- **Точка входа:** `./demo`
+- **Рабочая директория:** `/print/_install/bin`
+- **Переменные окружения:** `LOG_PATH=/home/logs/log.txt`
+- **Том:** `/home/logs`
+
+
+### 8. Настройка CI (GitHub Actions)
+
+**.github/workflows/docker.yml:**
+```yaml
+name: Docker Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker build -t logger .
+
+    - name: Test Docker container
+      run: |
+        mkdir -p logs
+        echo "test message" | docker run -i -v "$(pwd)/logs/:/home/logs/" logger
+        cat logs/log.txt
+```
+
+#### Коммитим & пушим все изменения на удалённый репозиторий
