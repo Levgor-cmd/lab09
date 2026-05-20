@@ -1,0 +1,49 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Setup CMake
+      uses: jwlawson/actions-setup-cmake@v1
+      with:
+        cmake-version: '3.22.x'
+    
+    - name: Build package
+      run: |
+        cmake -H. -B_build -DCPACK_GENERATOR="TGZ"
+        cmake --build _build --target package
+    
+    - name: Get package filename
+      id: package
+      run: |
+        PACKAGE_OS=$(uname -s)
+        PACKAGE_ARCH=$(uname -m)
+        echo "filename=print-${PACKAGE_OS}-${PACKAGE_ARCH}.tar.gz" >> $GITHUB_OUTPUT
+        echo "os=${PACKAGE_OS}" >> $GITHUB_OUTPUT
+        echo "arch=${PACKAGE_ARCH}" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: "libprint"
+        body: "my first release"
+        tag_name: ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        files: |
+          _build/*.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
